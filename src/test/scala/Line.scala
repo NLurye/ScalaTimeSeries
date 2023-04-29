@@ -1,34 +1,22 @@
-class Line(points: Array[Point]) {
-  require(points.length >= 2, "At least 2 points are required to define a line")
+class Line(ps:Array[Point]) {
+  private val xs: Array[Double] = ps.map(p => p.x)
+  private val ys: Array[Double] = ps.map(p => p.y)
+  val a: Double = get_a()
+  val b: Double = get_b()
 
-  // calculate slope and y-intercept
-  private val xValues = points.map(_.x)
-  private val yValues = points.map(_.y)
-  private val slope = Util.cov(xValues, yValues) / Util.variance(xValues)
-  private val yIntercept = Util.mu(yValues) - slope * Util.mu(xValues)
-
-  // equation of the line
-  def f(x: Double): Double = slope * x + yIntercept
-
-  // variance of y-values
-  def variance(): Double = Util.variance(yValues)
-
-  // covariance of x and y values
-  def cov(): Double = Util.cov(xValues, yValues)
-
-  // mean of x values
-  def mu_x(): Double = Util.mu(xValues)
-
-  // mean of y values
-  def mu_y(): Double = Util.mu(yValues)
-
+  // distance to a point
   def dist(p: Point): Double = {
-    val numerator = math.abs((points(1).y - points(0).y) * p.x - (points(1).x - points(0).x) * p.y + points(1).x * points(0).y - points(1).y * points(0).x)
-    val denominator = math.sqrt(math.pow(points(1).y - points(0).y, 2) + math.pow(points(1).x - points(0).x, 2))
-    numerator / denominator
+    Math.abs(p.y-f(p.x))
   }
 
-  def a(): Double = cov()/variance()
+  def get_a(): Double = {
+    Util.cov(xs,ys) / Util.variance(xs)
+  }
 
-  def b(): Double = mu_y()-(a()*mu_x())
+  def get_b(): Double = {
+    Util.mu(ys) - a* Util.mu(xs)
+  }
+
+  // equation of the line
+  def f(x: Double): Double = a * x + b
 }

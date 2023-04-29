@@ -10,31 +10,35 @@ object Util {
   }
 
   // map
-  def map[T, U](list: List[T], x: T => U, y: T => U): List[U] =
-    list.flatMap(t => List(x(t), y(t)))
+  def map[T, V](list: List[T], x: T => T, y: T => V): List[V] =
+    list.map(t => y(x(t)))
 
   // isSorted
-  def isSorted[A](lst: List[A], f: (A, A) => Boolean): Boolean = lst match {
-    case Nil => true
-    case _ :: Nil => true
-    case x :: y :: tail if f(x, y) => isSorted(y :: tail, f)
-    case _ => false
-  }
+  def isSorted[A](lst: List[A],comp: (A, A) => Boolean): Boolean =
+    lst.isEmpty || lst.sliding(2).forall(l => comp(l.head, l(1)))
+
 
   // probs
   def probs(xs: Array[Double]): Array[Double] = {
-    val total = xs.sum
-    xs.map(_ / total)
+    val total = xs.length
+    xs.map(x => xs.count(_ == x) / total.toDouble)
+  }
+
+  def countUniqueOccurrences[T](xs: Array[T]): Map[T, Int] = {
+    xs.groupBy(identity).view.map { case (k, v) => k -> v.length }.toMap
   }
 
   // entropy
   def entropy(xs: Array[Double]): Double = {
-    val total = xs.sum
-    xs.map(x => if (x == 0) 0 else -x / total * math.log(x / total)).sum
+    val uniqueCounts = countUniqueOccurrences(xs)
+    val sum =  uniqueCounts.values.sum.toDouble
+    val probabilities = uniqueCounts.values.map(x => x / sum)
+    -probabilities.map(p => p * (math.log(p) / math.log(2))).sum
   }
 
   // mu
-  def mu(xs: Array[Double]): Double = xs.sum / xs.length
+    def mu(xs: Array[Double]): Double = xs.sum / xs.length
+
 
   // variance
   def variance(xs: Array[Double]): Double = {
@@ -52,22 +56,19 @@ object Util {
 
   // cov
   def cov(xs: Array[Double], ys: Array[Double]): Double = {
-    require(xs.length == ys.length, "Arrays must have same length")
-    val n = xs.length
-    val xMean = xs.sum / n
-    val yMean = ys.sum / n
-    val covSum = (xs zip ys).map{ case (x, y) => (x - xMean) * (y - yMean)}.sum
-    covSum / (n - 1)
+    val xMean = mu(xs)
+    val yMean = mu(ys)
+    mu((xs zip ys).map{ case (x, y) => (x - xMean) * (y - yMean)})
   }
 
   // pearson
   def pearson(xs: Array[Double], ys: Array[Double]): Double = {
     val n = xs.length
-    val meanX = xs.sum / n
-    val meanY = ys.sum / n
-    val stdDevX = math.sqrt(xs.map(x => math.pow(x - meanX, 2)).sum / n)
-    val stdDevY = math.sqrt(ys.map(y => math.pow(y - meanY, 2)).sum / n)
-    val cov = (xs, ys).zipped.map(_ * _).sum / n - meanX * meanY
+    val xMean = mu(xs)
+    val yMean = mu(ys)
+    val stdDevX = math.sqrt(xs.map(x => math.pow(x - xMean, 2)).sum / n)
+    val stdDevY = math.sqrt(ys.map(y => math.pow(y - yMean, 2)).sum / n)
+    val cov = (xs zip ys).map{case (x, y) =>  (x - xMean) * (y - yMean)}.sum / n
     cov / (stdDevX * stdDevY)
   }
 }
