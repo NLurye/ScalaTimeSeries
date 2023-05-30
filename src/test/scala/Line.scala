@@ -1,14 +1,15 @@
 class Line(ps:Array[Point]) {
-  private val xs: Array[Double] = ps.map(p => p.x)
-  private val ys: Array[Double] = ps.map(p => p.y)
-  val a: Double = Util.cov(xs,ys) / Util.variance(xs)
-  val b: Double = Util.mu(ys) - a* Util.mu(xs)
-
-  // distance to a point
-  def dist(p: Point): Double = {
-    scala.math.abs(p.y-f(p.x))
+  val xs = new Array[Double](ps.length)
+  val ys = new Array[Double](ps.length)
+  for(i <- 0 until ps.length){
+    xs(i)=ps(i).x
+    ys(i)=ps(i).y
   }
 
-  // equation of the line
-  def f(x: Double): Double = a * x + b
+  val a=Util.cov(xs,ys) / Util.variance(xs)
+  val b=ys.sum/ys.length - a *xs.sum/xs.length
+
+  def f(x:Double):Double =  a*x+b
+
+  def dist(p:Point):Double = Math.abs(f(p.x)-p.y)
 }
